@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const session = event.data.object as Stripe.Checkout.Session;
-
   // user subscription completed
   if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+
     const subscription = await stripe.subscriptions.retrieve(
       session.subscription as string
     );
@@ -47,8 +47,14 @@ export async function POST(req: NextRequest) {
 
   // renew user subscription
   if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as Stripe.Invoice;
+
+    if (!invoice.subscription) {
+      return new NextResponse("Subscription ID is required.", { status: 400 });
+    }
+
     const subscription = await stripe.subscriptions.retrieve(
-      session.subscription as string
+      invoice.subscription as string
     );
 
     await db

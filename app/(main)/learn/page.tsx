@@ -7,22 +7,27 @@ import {
   getLessonPercentage,
   getUnit,
   getUserProgress,
+  getUserSubscription,
 } from "@/db/queries";
 import { redirect } from "next/navigation";
 import { Unit } from "./unit";
+import { Promo } from "@/components/promo";
+import { Quests } from "@/components/quests";
 
 const LearnPage = async () => {
   const userProgressData = getUserProgress();
   const unitsData = getUnit();
   const courseProgressData = getCourseProgress();
   const lessonPercentageData = getLessonPercentage();
+  const userSubscriptionData = getUserSubscription();
 
-  const [userProgress, units, courseProgress, lessonPercentage] =
+  const [userProgress, units, courseProgress, lessonPercentage, userSubsciption] =
     await Promise.all([
       userProgressData,
       unitsData,
       courseProgressData,
       lessonPercentageData,
+      userSubscriptionData
     ]);
 
   if (!userProgress || !userProgress.activeCourse) {
@@ -33,6 +38,8 @@ const LearnPage = async () => {
     redirect("/courses");
   }
 
+  const isPro = !!userSubsciption?.isActive;
+
   return (
     <div className="flex flex-row-reverse gap-[48px] px-6 ">
       <div>
@@ -41,8 +48,10 @@ const LearnPage = async () => {
             activeCourse={userProgress.activeCourse}
             hearts={userProgress.hearts}
             points={userProgress.points}
-            hasActiveSubscription={false}
+            hasActiveSubscription={!!userSubsciption?.isActive}
           />
+           {!isPro && <Promo />}
+        <Quests points={userProgress.points} />
         </StickyWrapper>
       </div>
       <FeedWrapper>
